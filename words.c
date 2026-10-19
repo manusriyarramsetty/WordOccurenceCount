@@ -1,6 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
+//HELPER FUNCTIONS HEREEE
+
+//check if argument passed is a file or a directory
+void check_path(char *path) {
+    
+    struct stat path_stat;
+
+    // stat() returns 0 on success. If it fails, the path likely doesn't exist.
+    if (stat(path, &path_stat) != 0) {
+        printf("Path '%s' does not exist or cannot be accessed.\n", path);
+        return;
+    }
+
+    // Determine what type of path it is
+    if (S_ISREG(path_stat.st_mode)) {
+        printf("%s is a regular file\n", path);
+    } else if (S_ISDIR(path_stat.st_mode)) {
+        printf("%s is a directory\n", path);
+    } else {
+        printf("%s is not a regular file or directory\n", path);
+    }
+}
 
 //first, parse through the command line argument
 
@@ -16,6 +40,7 @@ int main(int argc, char *argv[]) {
     while (i < argc) {
 
         if (strcmp(argv[i], "-s") == 0) {
+
             //handles with a space: -s .md
             if (i + 1 >= argc) {
                 fprintf(stderr, "Error: missing suffix after -s\n");
@@ -27,6 +52,7 @@ int main(int argc, char *argv[]) {
             i += 2;
 
         } else if (strncmp(argv[i], "-s", 2) == 0) {
+
             //handles without space: -s.md 
             suffix = argv[i] + 2;
 
@@ -36,7 +62,7 @@ int main(int argc, char *argv[]) {
             }
 
             i++;
-            
+
         } else {
             break;
         }
@@ -51,7 +77,7 @@ int main(int argc, char *argv[]) {
     printf("Suffix: %s\n", suffix);
 
     for (; i < argc; i++) {
-        printf("Path to process: %s\n", argv[i]);
+        check_path(argv[i]);
     }
 
     return 0;
