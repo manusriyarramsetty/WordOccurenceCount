@@ -7,6 +7,10 @@
 
 //HELPER FUNCTIONS HEREEE
 
+/*HI MANU! okay so once u start writing the word counting method or whatever
+there are some lines in the recursive parts i wrote that u need to replace with a function 
+call to your word counting function. ill mark them with a comment that says REPLACE */
+
 //rpinting the path using write()
 void print_path(const char *path) {
     write(STDOUT_FILENO, path, strlen(path));
@@ -29,6 +33,8 @@ int has_suffix(const char *filename, const char *suffix) {
 //need to declare 
 void check_path(char *path, char *suffix);
 void scan_directory(const char *path, const char *suffix);
+//void count_file(const char *path); 
+//REPLACE
 
 //recursive search
 void scan_directory(const char *path, const char *suffix) {
@@ -43,12 +49,10 @@ void scan_directory(const char *path, const char *suffix) {
 
     while ((entry = readdir(dir)) != NULL) {
 
-        /* Ignore hidden files and directories. */
         if (entry->d_name[0] == '.') {
             continue;
         }
 
-        /* Construct the full path to this entry. */
         size_t path_len = strlen(path);
         size_t name_len = strlen(entry->d_name);
 
@@ -73,14 +77,13 @@ void scan_directory(const char *path, const char *suffix) {
             perror(full_path);
 
         } else if (S_ISDIR(info.st_mode)) {
-
-            /* Recursively scan the subdirectory. */
+            //recurse again
             scan_directory(full_path, suffix);
 
         } else if (S_ISREG(info.st_mode) &&
                    has_suffix(entry->d_name, suffix)) {
 
-            /* Process files that match the suffix. */
+            //REPLACE
             print_path(full_path);
         }
 
@@ -105,6 +108,7 @@ void check_path(char *path, char *suffix) {
     // Determine what type of path it is
     if (S_ISREG(path_stat.st_mode)) {
         print_path(path);
+        //REPLACE
     } else if (S_ISDIR(path_stat.st_mode)) {
         // Recursively scan this directory
         scan_directory(path, suffix);
