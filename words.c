@@ -94,6 +94,17 @@ static void finish_word(char *word, size_t *length) {
     }
 }
 
+//made this method so that stray characters like punctuation or numbers dont get added to the word list 
+static void end_word (char *word, size_t *length, int *hasLetter) {
+    if(hasLetter){
+        finish_word(word, length);
+    }
+    else{
+        *length = 0;
+        word[0] = '\0';
+    }
+    *hasLetter = 0;
+}
 
 
 /* this is entirely for testing, so ignore during word counting method implementation
@@ -184,6 +195,7 @@ void scan_directory(const char *path, const char *suffix) {
 
             //REPLACE
             print_path(full_path);
+            count_words(full_path);
         }
 
         free(full_path);
@@ -251,21 +263,116 @@ void count_words(const char *path) {
 
     // A hyphen is held until we know whether a letter follows it, or its invalid
     int isHyphen = 0;
+    int lastWasLetter = 0; // Track if the last character was a letter
+    int hasLetter = 0;// Track if the current word has at least one letter
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
 
         for (ssize_t i = 0; i < bytes_read; i++) {
             
             char c = buffer[i];
-
             //four cases, letter, hyphen, apostrophe, or end word character
+            if (is_letter(c)) {
+                if (isHyphen) {
+                    append_char(&word, &length, &capacity, '-');
+                    isHyphen = 0;
+                }
+                append_char(&word, &length, &capacity, c);
+                lastWasLetter = 1;
+                hasLetter = 1;
 
-            
+            } else if (c == '-') {
+                if (lastWasLetter && !isHyphen) {
+                    isHyphen = 1;
+                } else {
+                    end_word(word, &length, &hasLetter);
+                    isHyphen = 0;
+                }
+                
+                lastWasLetter = 0;
+
+            } else if (c == '\'') {
+                if (isHyphen){
+                    isHyphen = 0;
+                    end_word(word, &length, &hasLetter);
+                }
+                append_char(&word, &length, &capacity, c);
+                lastWasLetter = 0;
+
+            } else {
+                isHyphen = 0;
+                end_word(word, &length, &hasLetter);
+                lastWasLetter = 0;
+            }
+
         }
     }
+    if (bytes_read == -1) {
+        perror(path);
+    }
+    end_word(word, &length, &hasLetter);
+    free(word);
+    close(fd);
 
 }
 
+int compare_counts(const void *a, const void *b) {
+    const struct WordCount *wc1 = *(const struct WordCount **)a;
+    const struct WordCount *wc2 = *(const struct WordCount **)b;
+    if (wc1->count < wc2->count) return 1;
+    if (wc1->count > wc2->count) return -1;
+    return strcmp(wc1->word, wc2->word);
+}
+
+static void write_all(const char *buf, size_t len) {
+    while (len > 0){
+        ssize_t n = write(STDOUT_FILENO, buf, len);
+        if (n <=- 0){
+            perror("write");
+            exit(1);
+        } 
+        buf += n;
+        len -= n;
+    }
+}
+
+/* copies the linked list into an array, sorts it, prints "word count" per line
+using write(), then frees everything */
+static void print_sorted_counts(void) {
+    size_t n = 0;
+    for (struct WordCount *current = word_counts; current != NULL; current = current->next) {
+        n++;
+    }
+    if(n ==0){
+        return;
+    }
+
+    //idk if I can declare a struct here 
+    struct WordCount **array = malloc(n * sizeof(struct WordCount *));
+    if (array == NULL) {
+        perror("malloc");
+        exit(1);
+    }
+    size_t idx = 0;
+    for (struct WordCount *current = word_counts; current != NULL; current = current->next) {
+        array[idx++] = current;
+    }
+    qsort(array, n, sizeof(struct WordCount *), compare_counts);
+
+    char num[32];
+    for (size_t i = 0; i < n; i++) {
+        write_all(array[i]->word, strlen(array[i]->word));
+        int len = snprintf(num, sizeof(num), " %zu\n", array[i]->count);
+        write_all(num, len);
+    }
+
+    for(size_t i = 0; i < n; i++){
+        free(array[i]->word);
+        free(array[i]);
+    }
+    free(array);
+    word_counts = NULL; // Reset the pointer for the next file
+}
 
 int main(int argc, char *argv[]) {
 
@@ -319,6 +426,8 @@ int main(int argc, char *argv[]) {
     for (; i < argc; i++) {
         check_path(argv[i], suffix);
     }
+
+    print_sorted_counts();
 
     return 0;
 }
