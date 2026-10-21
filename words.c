@@ -7,8 +7,17 @@
 
 #include <ctype.h>
 
-//HELPER FUNCTIONS HEREEE
+//use ts for open() and O_RDNLY in our countin word method
+#include <fcntl.h>
 
+/* hello manu! i wrote helper functions and added comments for what they do and where
+theyre gonna be called in the word counting method's logic in my head. i didnt finish 
+the word counting method, i js have like the start, where it sets it up and then the two loops
+to parse through and process each character. u get to finish that and then handle the
+sorting and printing the words by count*/
+
+
+//HELPER FUNCTIONS HEREEE
 struct WordCount {
     char *word;
     size_t count;
@@ -47,11 +56,58 @@ static int is_letter(char c) {
     return (c>= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
+/* if character is a letter or a valid apostrophe (aka not after a hyphen/is after a letter) 
+call this function in our word counting method. also not sure if apostrophes without a letter 
+after it counts. does foo' count? i think it does the assignment dont specify */
+
+static void append_char(char **word, size_t *length, size_t *capacity, char c) {
+    
+    //make more space if full
+    if (*length + 1 >= *capacity) {
+        size_t new_capacity = *capacity * 2;
+        char *temp = realloc(*word, new_capacity);
+
+        if (temp == NULL) {
+            perror("realloc");
+            free(*word);
+            exit(1);
+        }
+
+        *word = temp;
+        *capacity = new_capacity;
+    }
+
+    (*word)[*length] = c;
+    (*length)++;
+    (*word)[*length] = '\0';
+}
+
+/* call this function in our word counting method if we got a invalid hyphen, if we have
+an ending character (aka anything thats not a letter, apostrophe, or hyphen), or wtv 
+this also uses add word correctly, i hope*/
+static void finish_word(char *word, size_t *length) {
+    if (*length > 0) {
+        add_word(word);
+        *length = 0;
+        word[0] = '\0';
+    }
+}
 
 
-/*HI MANU! okay so once u start writing the word counting method or whatever
-there are some lines in the recursive parts i wrote that u need to replace with a function 
-call to your word counting function. ill mark them with a comment that says REPLACE */
+
+/* this is entirely for testing, so ignore during word counting method implementation
+(got ts online) -> shld be included in design notes */
+
+static void print_counts_for_testing(void) {
+    struct WordCount *current = word_counts;
+
+    while (current != NULL) {
+        printf("%s %zu\n", current->word, current->count);
+        current = current->next;
+    }
+}
+
+
 
 //rpinting the path using write()
 void print_path(const char *path) {
@@ -75,8 +131,8 @@ int has_suffix(const char *filename, const char *suffix) {
 //need to declare 
 void check_path(char *path, char *suffix);
 void scan_directory(const char *path, const char *suffix);
-//void count_file(const char *path); 
-//REPLACE
+void count_words(const char *path); 
+
 
 //recursive search
 void scan_directory(const char *path, const char *suffix) {
@@ -158,6 +214,58 @@ void check_path(char *path, char *suffix) {
 }
 
 
+/* gonna start writing counting word method here. THIS IS INCOMPLETEE i didnt finish 
+i js have the basic logic?*/
+
+
+void count_words(const char *path) {
+
+    //open file, error if open fails
+
+    int fd = open(path, O_RDONLY);
+
+    if (fd == -1) {
+        perror(path);
+        return;
+    }
+
+    //shld i make ts bigger. temporary capacity of each word, im js sayin its gonna 
+    //reach a max of 32 bytes rn
+    size_t capacity = 32;
+    size_t length = 0;
+
+    char *word = malloc(capacity);
+    if (word == NULL) {
+        perror("malloc");
+        close(fd);
+        exit(1);
+    }
+
+    //starting word!
+    word[0] = '\0';
+
+    //read files in chunks of buffer size 4096 bytes
+    char buffer[4096];
+    ssize_t bytes_read;
+
+    // A hyphen is held until we know whether a letter follows it, or its invalid
+    int isHyphen = 0;
+
+    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+
+        for (ssize_t i = 0; i < bytes_read; i++) {
+            
+            char c = buffer[i];
+
+            //four cases, letter, hyphen, apostrophe, or end word character
+
+            
+        }
+    }
+
+}
+
+
 int main(int argc, char *argv[]) {
 
     //first, parse through the command line argument
@@ -167,7 +275,7 @@ int main(int argc, char *argv[]) {
     //index for parsing the argument as an array: "words" term is 0, start at 1
     int i = 1;
 
-    // Parse the optional suffix argument.
+    // Parse the optional suffix argument
     while (i < argc) {
 
         if (strcmp(argv[i], "-s") == 0) {
@@ -199,7 +307,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // The remaining arguments are file or directory paths.
+    // The remaining arguments are file or directory paths
     if (i >= argc) {
         fprintf(stderr, "Usage: ./words [-s suffix] file_or_directory ...\n");
         return 1;
