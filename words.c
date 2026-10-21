@@ -5,7 +5,49 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#include <ctype.h>
+
 //HELPER FUNCTIONS HEREEE
+
+struct WordCount {
+    char *word;
+    size_t count;
+    struct WordCount *next;
+};
+
+struct WordCount *word_counts = NULL;
+
+static void add_word(const char *word) {
+    struct WordCount *current = word_counts;
+    while (current != NULL) {
+        if (strcmp(current->word, word) == 0) {
+            current->count++;
+            return;
+        }
+        current = current->next;
+    }
+    struct WordCount *item = malloc(sizeof(*item));
+    if (item == NULL) {
+        perror("malloc");
+        exit(1);
+    }
+    item->word = malloc(strlen(word) + 1);
+    if (item->word == NULL) {
+        perror("malloc");
+        free(item);
+        exit(1);
+    }
+    strcpy(item->word, word);
+    item->count = 1;
+    item->next = word_counts;
+    word_counts = item;
+}
+
+static int is_letter(char c) {
+    return (c>= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+
 
 /*HI MANU! okay so once u start writing the word counting method or whatever
 there are some lines in the recursive parts i wrote that u need to replace with a function 
