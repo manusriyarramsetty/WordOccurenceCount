@@ -85,6 +85,7 @@ static void append_char(char **word, size_t *length, size_t *capacity, char c) {
 /* call this function in our word counting method if we got a invalid hyphen, if we have
 an ending character (aka anything thats not a letter, apostrophe, or hyphen), or wtv 
 this also uses add word correctly, i hope*/
+
 static void finish_word(char *word, size_t *length) {
     if (*length > 0) {
         add_word(word);
