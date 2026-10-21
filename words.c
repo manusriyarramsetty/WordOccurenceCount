@@ -194,7 +194,7 @@ void scan_directory(const char *path, const char *suffix) {
                    has_suffix(entry->d_name, suffix)) {
 
             //REPLACE
-            print_path(full_path);
+            //print_path(full_path);
             count_words(full_path);
         }
 
@@ -212,13 +212,15 @@ void check_path(char *path, char *suffix) {
 
     // stat() returns 0 on success. If it fails, the path likely doesn't exist.
     if (stat(path, &path_stat) != 0) {
-        printf("Path '%s' does not exist or cannot be accessed.\n", path);
+        //printf("Path '%s' does not exist or cannot be accessed.\n", path);
+        fprintf(stderr, "Path '%s' does not exist or cannot be accessed.\n", path);
         return;
     }
 
     // Determine what type of path it is
     if (S_ISREG(path_stat.st_mode)) {
-        print_path(path);
+        //print_path(path);
+        count_words(path);
         //REPLACE
     } else if (S_ISDIR(path_stat.st_mode)) {
         // Recursively scan this directory
@@ -327,7 +329,7 @@ int compare_counts(const void *a, const void *b) {
 static void write_all(const char *buf, size_t len) {
     while (len > 0){
         ssize_t n = write(STDOUT_FILENO, buf, len);
-        if (n <=- 0){
+        if (n <= 0){
             perror("write");
             exit(1);
         } 
@@ -415,13 +417,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (i >= argc) {
+        check_path("testerfile.txt", suffix);
+        print_sorted_counts();
+        return 0;
+    }
+    
     // The remaining arguments are file or directory paths
     if (i >= argc) {
         fprintf(stderr, "Usage: ./words [-s suffix] file_or_directory ...\n");
         return 1;
     }
 
-    printf("Suffix: %s\n", suffix);
+    //printf("Suffix: %s\n", suffix);
 
     for (; i < argc; i++) {
         check_path(argv[i], suffix);
