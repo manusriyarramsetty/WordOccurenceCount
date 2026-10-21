@@ -10,13 +10,6 @@
 //use ts for open() and O_RDNLY in our countin word method
 #include <fcntl.h>
 
-/* hello manu! i wrote helper functions and added comments for what they do and where
-theyre gonna be called in the word counting method's logic in my head. i didnt finish 
-the word counting method, i js have like the start, where it sets it up and then the two loops
-to parse through and process each character. u get to finish that and then handle the
-sorting and printing the words by count*/
-
-
 //HELPER FUNCTIONS HEREEE
 struct WordCount {
     char *word;
@@ -83,8 +76,7 @@ static void append_char(char **word, size_t *length, size_t *capacity, char c) {
 }
 
 /* call this function in our word counting method if we got a invalid hyphen, if we have
-an ending character (aka anything thats not a letter, apostrophe, or hyphen), or wtv 
-this also uses add word correctly, i hope*/
+an ending character (aka anything thats not a letter, apostrophe, or hyphen)*/
 
 static void finish_word(char *word, size_t *length) {
     if (*length > 0) {
@@ -108,7 +100,7 @@ static void end_word (char *word, size_t *length, int *hasLetter) {
 
 
 /* this is entirely for testing, so ignore during word counting method implementation
-(got ts online) -> shld be included in design notes */
+ -> shld be included in design notes */
 
 static void print_counts_for_testing(void) {
     struct WordCount *current = word_counts;
@@ -193,7 +185,6 @@ void scan_directory(const char *path, const char *suffix) {
         } else if (S_ISREG(info.st_mode) &&
                    has_suffix(entry->d_name, suffix)) {
 
-            //REPLACE
             //print_path(full_path);
             count_words(full_path);
         }
@@ -229,10 +220,6 @@ void check_path(char *path, char *suffix) {
 }
 
 
-/* gonna start writing counting word method here. THIS IS INCOMPLETEE i didnt finish 
-i js have the basic logic?*/
-
-
 void count_words(const char *path) {
 
     //open file, error if open fails
@@ -244,8 +231,6 @@ void count_words(const char *path) {
         return;
     }
 
-    //shld i make ts bigger. temporary capacity of each word, im js sayin its gonna 
-    //reach a max of 32 bytes rn
     size_t capacity = 32;
     size_t length = 0;
 
@@ -256,7 +241,7 @@ void count_words(const char *path) {
         exit(1);
     }
 
-    //starting word!
+    //starting word
     word[0] = '\0';
 
     //read files in chunks of buffer size 4096 bytes
@@ -349,7 +334,6 @@ static void print_sorted_counts(void) {
         return;
     }
 
-    //idk if I can declare a struct here 
     struct WordCount **array = malloc(n * sizeof(struct WordCount *));
     if (array == NULL) {
         perror("malloc");
