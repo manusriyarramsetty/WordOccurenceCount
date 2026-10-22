@@ -24,3 +24,6 @@ We also tested invalid file paths and checked that the final output followed the
 
 3.) Sorting and printing words by count 
 
+We created files in which several words appeared the same number of times so that we could check that the ties were ordered lexographically. We also checked that words with higher counts were printed first. We included words that differ in capitalization and punctuation so that they were sorted as seperate words in the right order. We also compared our output to the example given in the assignment ("spam eggs bacon spam") to further make sure that the order and format were correct. We also tested an empty file to make sure that nothing was printed. 
+
+
